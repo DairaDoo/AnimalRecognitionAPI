@@ -5,9 +5,13 @@ import faiss
 import torch
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # --- Configuration ---
-IMAGE_FOLDER = r"C:\codigo_proyectos_localmente_estudio\EncuentraTuMascotaPR\EncuentraTuMascotaPRAPI\wwwroot\reports"
+IMAGE_FOLDER = os.getenv("ImagePath")
 BASE_URL = "http://127.0.0.1:8000/images/"
 BATCH_SIZE = 32 # Process images in chunks to speed up CPU usage
 DEVICE = "cpu"

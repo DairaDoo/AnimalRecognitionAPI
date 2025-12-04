@@ -5,17 +5,22 @@ import faiss
 import torch
 import numpy as np
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from transformers import CLIPProcessor, CLIPModel
+from dotenv import load_dotenv
+from typing import Annotated 
+
+# Load environment variables
+load_dotenv()
 
 # --- Settings ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INDEX_PATH = os.path.join(BASE_DIR, "../index.faiss")
 META_PATH = os.path.join(BASE_DIR, "../id_to_meta.pkl")
-IMAGE_FOLDER = r"C:\codigo_proyectos_localmente_estudio\EncuentraTuMascotaPR\EncuentraTuMascotaPRAPI\wwwroot\reports"
+IMAGE_FOLDER = os.getenv("ImagePath")
 
 # Global variables for models
 ml_models = {}
@@ -74,7 +79,7 @@ async def serve_image(filename: str):
     return FileResponse(image_path)
 
 @app.post("/search")
-async def search_image(file: UploadFile = File(...), top_k: int = Form(5)):
+async def search_image(file: UploadFile = File(...), top_k: Annotated[int, Query(ge=1, le=50)] = 5):
     if ml_models["index"] is None:
         raise HTTPException(status_code=500, detail="Index not loaded. Run prepare_index.py first.")
 
