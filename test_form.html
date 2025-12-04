@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buscar imágenes similares</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4">Buscar imágenes similares</h2>
+
+    <form id="searchForm" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="file" class="form-label">Selecciona imagen:</label>
+            <input type="file" id="file" name="file" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="top_k" class="form-label">Top K:</label>
+            <input type="number" id="top_k" name="top_k" class="form-control" value="5" min="1">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+
+    <hr>
+
+    <h3>Resultados:</h3>
+    <div id="results" class="row row-cols-1 row-cols-md-3 g-3 mt-3"></div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const form = document.getElementById('searchForm');
+const resultsDiv = document.getElementById('results');
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    formData.set("top_k", document.getElementById('top_k').value);
+    try {
+        const response = await fetch('http://127.0.0.1:8000/search', {
+            method: 'POST',
+            body: formData
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
+        }
+        const data = await response.json();
+        
+        // DEBUG: Log the full response
+        console.log('Response data:', data);
+        
+        // Limpiar resultados anteriores
+        resultsDiv.innerHTML = '';
+        // Mostrar imágenes
+        data.results.forEach(imgData => {
+            // DEBUG: Log each image URL
+            console.log('Image URL:', imgData.url);
+            
+            const col = document.createElement('div');
+            col.className = 'col';
+            const card = document.createElement('div');
+            card.className = 'card';
+            const img = document.createElement('img');
+            img.src = imgData.url;
+            img.className = 'card-img-top';
+            img.alt = imgData.filename;
+            
+            // DEBUG: Log image load errors
+            img.onerror = () => {
+                console.error('Failed to load image:', imgData.url);
+            };
+            img.onload = () => {
+                console.log('Successfully loaded:', imgData.url);
+            };
+            
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body';
+            const title = document.createElement('h6');
+            title.className = 'card-title';
+            title.innerText = `${imgData.filename} (score: ${imgData.score.toFixed(3)})`;
+            cardBody.appendChild(title);
+            card.appendChild(img);
+            card.appendChild(cardBody);
+            col.appendChild(card);
+            resultsDiv.appendChild(col);
+        });
+    } catch (err) {
+        console.error(err);
+        alert("Error al buscar imágenes: " + err.message);
+    }
+});
+</script>
+</body>
+</html>
